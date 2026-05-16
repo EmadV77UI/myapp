@@ -1,0 +1,38 @@
+name: Build iOS IPA
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -switch /Applications/Xcode_15.4.app
+
+      - name: Build project
+        run: |
+          xcodebuild -project EABVFX.xcodeproj \
+            -scheme EABVFX \
+            -sdk iphoneos \
+            -configuration Release \
+            build CODE_SIGNING_ALLOWED=NO
+
+      - name: Create Payload folder
+        run: |
+          mkdir Payload
+          cp -r build/Release-iphoneos/EABVFX.app Payload/
+
+      - name: Zip into IPA
+        run: zip -r EABVFX.ipa Payload
+
+      - name: Upload IPA as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: EABVFX.ipa
+          path: EABVFX.ipa
